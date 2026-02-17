@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mermaid Diagram Creator</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #4a90d9;
+      --primary-hover: #357abd;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+      --bg-color: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --border-color: #e1e5eb;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, var(--primary-color), #6c5ce7);
+      color: white;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      opacity: 0.9;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: var(--bg-color);
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.1);
+    }
+
+    textarea.form-control {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 300px;
+    }
+
+    select.form-control {
+      cursor: pointer;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-success {
+      background-color: var(--success-color);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #218838;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .diagram-container {
+      min-height: 400px;
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      padding: 20px;
+      background: white;
+    }
+
+    .diagram-container.has-content {
+      border-style: solid;
+      border-color: var(--success-color);
+    }
+
+    .diagram-placeholder {
+      text-align: center;
+      color: #999;
+    }
+
+    .diagram-placeholder svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    .error-message {
+      background: #fee;
+      border: 1px solid var(--danger-color);
+      color: var(--danger-color);
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .success-message {
+      background: #efe;
+      border: 1px solid var(--success-color);
+      color: var(--success-color);
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .options-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .options-panel .form-group {
+      margin-bottom: 0;
+    }
+
+    .theme-selector {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .theme-option {
+      padding: 8px 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+
+    .theme-option:hover {
+      border-color: var(--primary-color);
+    }
+
+    .theme-option.active {
+      border-color: var(--primary-color);
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .filename-input {
+      display: flex;
+      gap: 10px;
+    }
+
+    .filename-input input {
+      flex: 1;
+    }
+
+    /* Diagram output styling */
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+
+    .mermaid svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: var(--success-color);
+    }
+
+    .toast.error {
+      background: var(--danger-color);
+    }
+
+    /* Examples dropdown */
+    .examples-dropdown {
+      position: relative;
+    }
+
+    .examples-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      min-width: 200px;
+      z-index: 100;
+      display: none;
+    }
+
+    .examples-menu.show {
+      display: block;
+    }
+
+    .examples-menu-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .examples-menu-item:hover {
+      background: var(--bg-color);
+    }
+
+    .examples-menu-item:first-child {
+      border-radius: 6px 6px 0 0;
+    }
+
+    .examples-menu-item:last-child {
+      border-radius: 0 0 6px 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎨 Mermaid Diagram Creator</h1>
+      <p>Create beautiful diagrams from code and export them as PNG images</p>
+    </header>
+
+    <div class="main-content">
+      <!-- Input Panel -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📝 Diagram Editor</h2>
+          <div class="examples-dropdown">
+            <button class="btn btn-primary" onclick="toggleExamples()">📚 Load Example</button>
+            <div class="examples-menu" id="examplesMenu">
+              <div class="examples-menu-item" onclick="loadExample('flowchart')">Flowchart</div>
+              <div class="examples-menu-item" onclick="loadExample('sequence')">Sequence Diagram</div>
+              <div class="examples-menu-item" onclick="loadExample('class')">Class Diagram</div>
+              <div class="examples-menu-item" onclick="loadExample('state')">State Diagram</div>
+              <div class="examples-menu-item" onclick="loadExample('er')">ER Diagram</div>
+              <div class="examples-menu-item" onclick="loadExample('gantt')">Gantt Chart</div>
+              <div class="examples-menu-item" onclick="loadExample('pie')">Pie Chart</div>
+              <div class="examples-menu-item" onclick="loadExample('mindmap')">Mindmap</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="error-message" id="errorMessage"></div>
+          <div class="success-message" id="successMessage"></div>
+
+          <div class="form-group">
+            <label for="diagramTitle">Diagram Title</label>
+            <input type="text" id="diagramTitle" class="form-control" placeholder="Enter diagram title..." value="My Diagram">
+          </div>
+
+          <div class="form-group">
+            <label for="diagramCode">Mermaid Code</label>
+            <textarea id="diagramCode" class="form-control" placeholder="Enter your Mermaid diagram code here...
+
+Example:
+flowchart TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+    C --> E[End]
+    D --> E"></textarea>
+          </div>
+
+          <div class="options-panel">
+            <div class="form-group">
+              <label>Theme</label>
+              <div class="theme-selector">
+                <span class="theme-option" data-theme="default" onclick="setTheme('default')">Default</span>
+                <span class="theme-option active" data-theme="dark" onclick="setTheme('dark')">Dark</span>
+                <span class="theme-option" data-theme="forest" onclick="setTheme('forest')">Forest</span>
+                <span class="theme-option" data-theme="neutral" onclick="setTheme('neutral')">Neutral</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary" onclick="renderDiagram()">
+              🎯 Render Diagram
+            </button>
+            <button class="btn btn-danger" onclick="clearDrawing()">
+              🧹 Clear
+            </button>
+            <button class="btn btn-success" onclick="downloadPNG()">
+              📥 Download PNG
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🖼️ Diagram Preview</h2>
+        </div>
+        <div class="card-body">
+          <div class="diagram-container" id="diagramContainer">
+            <div class="diagram-placeholder" id="placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+              <p>Your diagram will appear here</p>
+              <small>Enter Mermaid code and click "Render Diagram"</small>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 15px;">
+            <label for="filename">Download Filename</label>
+            <div class="filename-input">
+              <input type="text" id="filename" class="form-control" placeholder="diagram" value="my-diagram">
+              <span style="display: flex; align-items: center; color: #666;">.png</span>
+            </div>
+          </div>
+
+          <div class="options-panel">
+            <div class="form-group">
+              <label for="scale">Scale</label>
+              <select id="scale" class="form-control">
+                <option value="1">1x (Normal)</option>
+                <option value="2">2x (High Quality)</option>
+                <option value="3">3x (Ultra HD)</option>
+                <option value="4">4x (Print Quality)</option>
+                <option value="8" selected>8x (Ultra Print Quality)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="bgColor">Background</label>
+              <select id="bgColor" class="form-control">
+                <option value="#ffffff">White</option>
+                <option value="transparent">Transparent</option>
+                <option value="#f5f5f5">Light Gray</option>
+                <option value="#1e1e1e" selected>Dark</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Initialize Mermaid
+    let currentTheme = 'default';
+    let currentDiagram = null;
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: currentTheme,
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis'
+      }
+    });
+
+    // Example diagrams
+    const examples = {
+      flowchart: `flowchart TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> E[Find the bug]
+    E --> F[Fix the bug]
+    F --> B
+    C --> G[Deploy]
+    G --> H[Celebrate! 🎉]`,
+      sequence: `sequenceDiagram
+    participant User
+    participant Browser
+    participant Server
+    participant Database
+
+    User->>Browser: Click Login
+    Browser->>Server: POST /login
+    Server->>Database: Query user
+    Database-->>Server: User data
+    Server-->>Browser: JWT Token
+    Browser-->>User: Redirect to Dashboard`,
+      class: `classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound()
+    }
+    class Dog {
+        +String breed
+        +bark()
+        +fetch()
+    }
+    class Cat {
+        +String color
+        +meow()
+        +scratch()
+    }
+    Animal <|-- Dog
+    Animal <|-- Cat`,
+      state: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Processing: Start
+    Processing --> Success: Complete
+    Processing --> Error: Fail
+    Error --> Idle: Retry
+    Success --> [*]`,
+      er: `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE_ITEM : contains
+    PRODUCT ||--o{ LINE_ITEM : "is in"
+    CUSTOMER {
+        string name
+        string email
+        int id PK
+    }
+    ORDER {
+        int id PK
+        date created
+        string status
+    }
+    PRODUCT {
+        int id PK
+        string name
+        float price
+    }`,
+      gantt: `gantt
+    title Project Development Timeline
+    dateFormat  YYYY-MM-DD
+    section Planning
+    Requirements    :a1, 2024-01-01, 7d
+    Design          :a2, after a1, 5d
+    section Development
+    Backend         :a3, after a2, 14d
+    Frontend        :a4, after a2, 10d
+    Testing         :a5, after a3, 7d
+    section Deployment
+    Deploy          :a6, after a5, 3d`,
+      pie: `pie showData
+    title Browser Market Share
+    "Chrome" : 65
+    "Safari" : 19
+    "Firefox" : 8
+    "Edge" : 5
+    "Others" : 3`,
+      mindmap: `mindmap
+  root((Project))
+    Planning
+      Requirements
+      Timeline
+      Budget
+    Development
+      Frontend
+        React
+        CSS
+      Backend
+        Node.js
+        Database
+    Testing
+      Unit Tests
+      Integration
+    Deployment
+      CI/CD
+      Monitoring`
+    };
+
+    // Toggle examples menu
+    function toggleExamples() {
+      const menu = document.getElementById('examplesMenu');
+      menu.classList.toggle('show');
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.querySelector('.examples-dropdown');
+      if (!dropdown.contains(e.target)) {
+        document.getElementById('examplesMenu').classList.remove('show');
+      }
+    });
+
+    // Load example
+    function loadExample(type) {
+      document.getElementById('diagramCode').value = examples[type];
+      document.getElementById('examplesMenu').classList.remove('show');
+      showToast('Example loaded!', 'success');
+    }
+
+    // Set theme
+    function setTheme(theme) {
+      currentTheme = theme;
+      document.querySelectorAll('.theme-option').forEach(el => {
+        el.classList.remove('active');
+        if (el.dataset.theme === theme) {
+          el.classList.add('active');
+        }
+      });
+
+      // Re-render if there's a diagram
+      if (currentDiagram) {
+        renderDiagram();
+      }
+    }
+
+    // Show error message
+    function showError(message) {
+      const errorEl = document.getElementById('errorMessage');
+      errorEl.textContent = message;
+      errorEl.classList.add('show');
+      document.getElementById('successMessage').classList.remove('show');
+    }
+
+    // Show success message
+    function showSuccess(message) {
+      const successEl = document.getElementById('successMessage');
+      successEl.textContent = message;
+      successEl.classList.add('show');
+      document.getElementById('errorMessage').classList.remove('show');
+    }
+
+    // Clear messages
+    function clearMessages() {
+      document.getElementById('errorMessage').classList.remove('show');
+      document.getElementById('successMessage').classList.remove('show');
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Render diagram
+    async function renderDiagram() {
+      clearMessages();
+      const code = document.getElementById('diagramCode').value.trim();
+
+      if (!code) {
+        showError('Please enter Mermaid diagram code');
+        return;
+      }
+
+      const container = document.getElementById('diagramContainer');
+      const placeholder = document.getElementById('placeholder');
+
+      // Show loading
+      placeholder.innerHTML = '<div class="spinner"></div>';
+      placeholder.style.display = 'flex';
+
+      try {
+        // Reinitialize mermaid with current theme
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: currentTheme,
+          securityLevel: 'loose',
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis'
+          }
+        });
+
+        // Generate unique ID
+        const id = 'mermaid-' + Date.now();
+
+        // Render the diagram
+        const { svg } = await mermaid.render(id, code);
+
+        // Display the SVG
+        container.innerHTML = svg;
+        container.classList.add('has-content');
+        currentDiagram = svg;
+
+        showSuccess('Diagram rendered successfully!');
+      } catch (error) {
+        showError('Failed to render diagram: ' + error.message);
+        placeholder.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+          <p>Error rendering diagram</p>
+          <small>Check your Mermaid syntax</small>
+        `;
+        container.classList.remove('has-content');
+        currentDiagram = null;
+      }
+    }
+
+    function clearDrawing() {
+      const container = document.getElementById('diagramContainer');
+      const placeholder = document.createElement('div');
+      placeholder.id = 'placeholder';
+      placeholder.className = 'diagram-placeholder';
+      placeholder.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+        <p>Your diagram will appear here</p>
+        <small>Enter Mermaid code and click "Render Diagram"</small>
+      `;
+      container.classList.remove('has-content');
+      container.innerHTML = '';
+      container.appendChild(placeholder);
+      currentDiagram = null;
+    }
+
+    // Download as PNG
+    async function downloadPNG() {
+      if (!currentDiagram) {
+        showError('Please render a diagram first');
+        return;
+      }
+
+      const scale = parseInt(document.getElementById('scale').value);
+      const bgColor = document.getElementById('bgColor').value;
+      const filename = document.getElementById('filename').value || 'diagram';
+
+      try {
+        // Create a temporary container
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = currentDiagram;
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '-9999px';
+        document.body.appendChild(tempContainer);
+
+        const svgElement = tempContainer.querySelector('svg');
+        if (!svgElement) {
+          throw new Error('SVG element not found');
+        }
+
+        // Get SVG dimensions
+        const svgRect = svgElement.getBoundingClientRect();
+        const width = svgRect.width;
+        const height = svgRect.height;
+        const padding = 20;
+
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = (width + padding * 2) * scale;
+        canvas.height = (height + padding * 2) * scale;
+        const ctx = canvas.getContext('2d');
+
+        // Fill background
+        if (bgColor !== 'transparent') {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Convert SVG to base64 data URL (avoids tainted canvas security issue)
+        const svgData = new XMLSerializer().serializeToString(svgElement);
+        // Use base64 encoding to avoid tainted canvas issues
+        const svgBase64 = btoa(unescape(encodeURIComponent(svgData)));
+        const dataUrl = 'data:image/svg+xml;base64,' + svgBase64;
+
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, padding * scale, padding * scale, width * scale, height * scale);
+
+          // Download
+          canvas.toBlob(blob => {
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = 'Image_' + filename + (new Date()).toISOString().slice(0, 19).replace(/:/g, '_') + '.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(downloadUrl);
+
+            document.body.removeChild(tempContainer);
+            showToast('Diagram downloaded successfully!', 'success');
+            setTimeout(() => {
+              showToast('Thank you for using Mermaid Diagram Creator! 🎉', 'success');
+              clearDrawing();
+            }, 2000);
+          }, 'image/png', 1.0);
+        };
+
+        img.onerror = () => {
+          document.body.removeChild(tempContainer);
+          showError('Failed to convert SVG to image');
+        };
+
+        img.src = dataUrl;
+      } catch (error) {
+        showError('Failed to download: ' + error.message);
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + Enter to render
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        renderDiagram();
+      }
+      // Ctrl/Cmd + S to download
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        downloadPNG();
+      }
+    });
+  </script>
+</body>
+</html>
