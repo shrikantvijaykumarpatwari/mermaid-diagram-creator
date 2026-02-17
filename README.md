@@ -14,7 +14,7 @@ A utility for creating Mermaid diagrams from structured data with PNG export cap
 
 ## Installation
 
-No installation required for the HTML version - just open [`mermaid-diagram.html`](mermaid-diagram.html) in a browser.
+No installation required for the HTML version - just open [`index.html`](index.html) in a browser.
 
 For Node.js usage:
 
